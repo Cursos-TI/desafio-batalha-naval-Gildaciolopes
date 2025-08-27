@@ -1,40 +1,102 @@
 #include <stdio.h>
+#include <stdbool.h>
 
-// Desafio Batalha Naval - MateCheck
-// Este código inicial serve como base para o desenvolvimento do sistema de Batalha Naval.
-// Siga os comentários para implementar cada parte do desafio.
+#define ROWS 10
+#define COLS 10
+#define SHIP_SIZE 3
+#define WATER 0
+#define SHIP 3
 
-int main() {
-    // Nível Novato - Posicionamento dos Navios
-    // Sugestão: Declare uma matriz bidimensional para representar o tabuleiro (Ex: int tabuleiro[5][5];).
-    // Sugestão: Posicione dois navios no tabuleiro, um verticalmente e outro horizontalmente.
-    // Sugestão: Utilize `printf` para exibir as coordenadas de cada parte dos navios.
+/* Verifica se dá para posicionar horizontalmente (sem sair dos limites e sem sobreposição) */
+bool can_place_horizontal(int board[ROWS][COLS], int start_row, int start_col) {
+    if (start_row < 0 || start_row >= ROWS) return false;
+    if (start_col < 0 || start_col + SHIP_SIZE > COLS) return false; // +SHI P_SIZE porque ocupa posições [start_col .. start_col+SHIP_SIZE-1]
+    for (int c = start_col; c < start_col + SHIP_SIZE; ++c) {
+        if (board[start_row][c] != WATER) return false; // já ocupado
+    }
+    return true;
+}
 
-    // Nível Aventureiro - Expansão do Tabuleiro e Posicionamento Diagonal
-    // Sugestão: Expanda o tabuleiro para uma matriz 10x10.
-    // Sugestão: Posicione quatro navios no tabuleiro, incluindo dois na diagonal.
-    // Sugestão: Exiba o tabuleiro completo no console, mostrando 0 para posições vazias e 3 para posições ocupadas.
+/* Verifica se dá para posicionar verticalmente (sem sair dos limites e sem sobreposição) */
+bool can_place_vertical(int board[ROWS][COLS], int start_row, int start_col) {
+    if (start_col < 0 || start_col >= COLS) return false;
+    if (start_row < 0 || start_row + SHIP_SIZE > ROWS) return false;
+    for (int r = start_row; r < start_row + SHIP_SIZE; ++r) {
+        if (board[r][start_col] != WATER) return false; // já ocupado
+    }
+    return true;
+}
 
-    // Nível Mestre - Habilidades Especiais com Matrizes
-    // Sugestão: Crie matrizes para representar habilidades especiais como cone, cruz, e octaedro.
-    // Sugestão: Utilize estruturas de repetição aninhadas para preencher as áreas afetadas por essas habilidades no tabuleiro.
-    // Sugestão: Exiba o tabuleiro com as áreas afetadas, utilizando 0 para áreas não afetadas e 1 para áreas atingidas.
+/* Copia o navio (valor SHIP) para o tabuleiro horizontalmente */
+void place_horizontal(int board[ROWS][COLS], int start_row, int start_col) {
+    for (int c = start_col; c < start_col + SHIP_SIZE; ++c) {
+        board[start_row][c] = SHIP;
+    }
+}
 
-    // Exemplos de exibição das habilidades:
-    // Exemplo para habilidade em cone:
-    // 0 0 1 0 0
-    // 0 1 1 1 0
-    // 1 1 1 1 1
-    
-    // Exemplo para habilidade em octaedro:
-    // 0 0 1 0 0
-    // 0 1 1 1 0
-    // 0 0 1 0 0
+/* Copia o navio (valor SHIP) para o tabuleiro verticalmente */
+void place_vertical(int board[ROWS][COLS], int start_row, int start_col) {
+    for (int r = start_row; r < start_row + SHIP_SIZE; ++r) {
+        board[r][start_col] = SHIP;
+    }
+}
 
-    // Exemplo para habilidade em cruz:
-    // 0 0 1 0 0
-    // 1 1 1 1 1
-    // 0 0 1 0 0
+/* Imprime o tabuleiro com cabeçalho de colunas para facilitar visualização */
+void print_board(int board[ROWS][COLS]) {
+    printf("   "); // espaço para índice de linha
+    for (int c = 0; c < COLS; ++c) {
+        printf("%d ", c);
+    }
+    printf("\n");
+
+    for (int r = 0; r < ROWS; ++r) {
+        printf("%2d ", r); // índice da linha
+        for (int c = 0; c < COLS; ++c) {
+            printf("%d ", board[r][c]);
+        }
+        printf("\n");
+    }
+}
+
+int main(void) {
+    /* Inicializa o tabuleiro com água (0) */
+    int board[ROWS][COLS];
+    for (int r = 0; r < ROWS; ++r)
+        for (int c = 0; c < COLS; ++c)
+            board[r][c] = WATER;
+
+    /* --------- Coordenadas dos navios (definidas no código) ---------
+       OBS: os índices são 0-based (linha 0..9, coluna 0..9)
+       Altere estes valores para testar outros posicionamentos.
+       Exemplo atual:
+         - navio_horizontal começa em linha 2, coluna 4 (ocupa 2,4 - 2,6)
+         - navio_vertical começa em linha 5, coluna 7 (ocupa 5,7 - 7,7)
+    -----------------------------------------------------------------*/
+    int horiz_start_row = 2;
+    int horiz_start_col = 4;
+
+    int vert_start_row = 5;
+    int vert_start_col = 7;
+
+    /* Valida e posiciona navio horizontal */
+    if (!can_place_horizontal(board, horiz_start_row, horiz_start_col)) {
+        printf("Erro: não é possível posicionar o navio horizontal em (%d,%d).\n",
+               horiz_start_row, horiz_start_col);
+        return 1;
+    }
+    place_horizontal(board, horiz_start_row, horiz_start_col);
+
+    /* Valida e posiciona navio vertical (garante que não sobrescreva o horizontal) */
+    if (!can_place_vertical(board, vert_start_row, vert_start_col)) {
+        printf("Erro: não é possível posicionar o navio vertical em (%d,%d).\n",
+               vert_start_row, vert_start_col);
+        return 1;
+    }
+    place_vertical(board, vert_start_row, vert_start_col);
+
+    /* Exibe o tabuleiro final */
+    printf("Tabuleiro com navios posicionados (0 = água, 3 = navio):\n");
+    print_board(board);
 
     return 0;
 }
